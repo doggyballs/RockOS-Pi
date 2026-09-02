@@ -30,3 +30,9 @@ rockos-browser/rockos-browser
 
 # Script backups
 *.before-*
+
+# Binary GitHub Release assets
+release/*.img
+release/*.img.xz
+release/*.vdi
+release/*.vdi.xz

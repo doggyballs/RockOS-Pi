@@ -1,0 +1,32 @@
+# Buildroot build/download output
+buildroot/output/
+buildroot/dl/
+
+# Disk images
+*.img
+*.ext2
+*.vdi
+*.iso
+
+# Compressed releases
+*.img.xz
+*.tar.xz
+
+# Backups
+*BACKUP*
+*CHECKPOINT*
+
+# Temporary files
+*.tmp
+*.bak
+*~
+.DS_Store
+
+# Local Qt build artifacts
+.qmake.stash
+Makefile
+*.o
+rockos-browser/rockos-browser
+
+# Script backups
+*.before-*

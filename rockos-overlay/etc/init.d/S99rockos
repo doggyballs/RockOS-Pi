@@ -1,0 +1,61 @@
+#!/bin/sh
+
+# Show RockOS startup diagnostics on the physical/VM display.
+exec >/dev/tty1 2>&1
+
+echo
+echo "===== ROCKOS KIOSK STARTUP ====="
+
+export XDG_RUNTIME_DIR=/run/user/0
+export WAYLAND_DISPLAY=wayland-0
+
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+echo "ROCKOS: starting Weston..."
+
+weston \
+    --backend=drm-backend.so \
+    --shell=kiosk-shell.so \
+    --socket=wayland-0 &
+
+WESTON_PID=$!
+
+echo "ROCKOS: Weston PID $WESTON_PID"
+
+i=0
+while [ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; do
+    sleep 0.1
+    i=$((i + 1))
+
+    if ! kill -0 "$WESTON_PID" 2>/dev/null; then
+        echo
+        echo "ROCKOS ERROR: Weston exited before Wayland became ready."
+        exit 1
+    fi
+
+    if [ "$i" -ge 100 ]; then
+        echo
+        echo "ROCKOS ERROR: Weston did not become ready after 10 seconds."
+        kill "$WESTON_PID" 2>/dev/null
+        exit 1
+    fi
+done
+
+echo "ROCKOS: Wayland ready."
+
+sleep 1
+
+export QT_QPA_PLATFORM=wayland
+export QTWEBENGINE_DISABLE_SANDBOX=1
+export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
+
+echo "ROCKOS: starting EntropyLab..."
+
+/usr/bin/rockos-browser &
+
+BROWSER_PID=$!
+
+echo "ROCKOS: browser PID $BROWSER_PID"
+
+wait "$WESTON_PID"

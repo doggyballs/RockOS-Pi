@@ -1,0 +1,15 @@
+# RockOS rpi5 kernel fragment on top of bcm2712_defconfig (rpi linux 6.12.y)
+# Keep this minimal: only what RockOS needs beyond the rpi default.
+
+# 4K pages: required by QtWebEngine/Chromium on aarch64
+CONFIG_ARM64_4K_PAGES=y
+
+# Waveshare 7" DSI panel. The panel driver (panel-waveshare-dsi) is an
+# out-of-tree module shipped in the rpi-firmware blob, so we do NOT set an
+# in-tree CONFIG here. The vc4-kms-dsi-waveshare-panel,7_0_inchC overlay in
+# config.txt loads it. These are the in-tree pieces the stack needs:
+CONFIG_DRM_VC4=y
+CONFIG_DRM_PANEL=y
+CONFIG_BACKLIGHT_PWM=y
+CONFIG_I2C_BCM2835=y
+CONFIG_INPUT_TOUCHSCREEN=y

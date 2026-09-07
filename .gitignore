@@ -1,6 +1,7 @@
 # Buildroot build/download output
 buildroot/output/
 buildroot/dl/
+buildroot-rpi5/
 
 # Disk images
 *.img

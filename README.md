@@ -60,5 +60,19 @@ Useful test reports should include:
 - Any visible boot errors
 
 ## Version
-
 **RockOS 0.1.0-beta.1**
+
+## Raspberry Pi 5 (experimental)
+
+An experimental aarch64 port for the Raspberry Pi 5 + Waveshare 7" DSI
+touchscreen lives alongside the x86 build:
+
+- `config/rockos-rpi5_defconfig` — Buildroot defconfig (bcm2712, mesa v3d/vc4,
+  QtWebEngine, Weston kiosk)
+- `board/rockos/rpi5/` — firmware config, kernel fragment, genimage layout
+- `scripts/build-rpi5-image.sh` — one-shot build, produces
+  `buildroot-rpi5/output/images/rockos-rpi5-sdcard.img`
+
+The Waveshare panel is enabled via `vc4-kms-dsi-waveshare-panel,7_0_inchC` in
+`board/rockos/rpi5/config.txt`. All other RockOS hardening and the EntropyLab
+app are unchanged from the x86 build.

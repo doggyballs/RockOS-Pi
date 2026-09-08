@@ -1,0 +1,24 @@
+From: RockOS <rockos@localhost>
+Subject: [PATCH] sandbox: fix SYS_SECCOMP clash with glibc >= 2.36
+
+glibc 2.36+ defines SYS_SECCOMP as an enum constant in
+<bits/siginfo-consts.h> (via <signal.h>). Chromium's linux_seccomp.h
+falls back to #define SYS_SECCOMP 1, which collides when this header
+is included before <signal.h> (the later glibc enum line expands the
+macro). Include <signal.h> first so glibc's definition always wins
+and the #ifndef below becomes a no-op in both include orders.
+
+--- a/chromium/sandbox/linux/system_headers/linux_seccomp.h
++++ b/chromium/sandbox/linux/system_headers/linux_seccomp.h
+@@ -7,6 +7,11 @@
+ 
+ #include <stdint.h>
+ 
++// glibc >= 2.36 defines SYS_SECCOMP as an enum constant in
++// <bits/siginfo-consts.h> (via <signal.h>). Include it first so the
++// fallback define below sees it and does not redefine the enum constant.
++#include <signal.h>
++
+ #include "build/build_config.h"
+ 
+ #if !defined(OS_NACL_NONSFI)

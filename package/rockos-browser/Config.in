@@ -1,0 +1,7 @@
+config BR2_PACKAGE_ROCKOS_BROWSER
+	bool "rockos-browser"
+	depends on BR2_PACKAGE_QT5
+	depends on BR2_PACKAGE_QT5WEBENGINE
+	help
+	  RockOS kiosk browser: a minimal QtWebEngine QWebEngineView
+	  that loads the bundled EntropyLab app fullscreen.

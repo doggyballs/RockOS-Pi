@@ -3,8 +3,8 @@ kernel=Image
 # RockOS rpi5 firmware config
 disable_overscan=1
 
-# KMS graphics for Weston (replaces the legacy fkms stack)
-dtoverlay=vc4-kms-v3d
+# KMS graphics for Weston (Pi 5 variant)
+dtoverlay=vc4-kms-v3d-pi5
 
 # Waveshare 7" DSI touchscreen (display + I2C touch)
 dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC

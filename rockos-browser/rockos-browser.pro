@@ -4,3 +4,6 @@ CONFIG -= app_bundle
 
 TARGET = rockos-browser
 SOURCES += main.cpp
+
+target.path = /usr/bin
+INSTALLS += target

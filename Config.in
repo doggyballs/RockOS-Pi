@@ -1,0 +1,1 @@
+source "$BR2_EXTERNAL_ROCKOS_PATH/package/rockos-browser/Config.in"

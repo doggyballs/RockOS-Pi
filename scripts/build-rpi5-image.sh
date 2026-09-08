@@ -13,8 +13,8 @@ fi
 
 cd "$BR_DIR"
 cp "$ROCKOS_DIR/config/rockos-rpi5_defconfig" configs/
-make rockos-rpi5_defconfig
-make
+make BR2_EXTERNAL="$ROCKOS_DIR" rockos-rpi5_defconfig
+make BR2_EXTERNAL="$ROCKOS_DIR"
 
 echo
 echo "===== RockOS rpi5 image ====="

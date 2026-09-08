@@ -3,8 +3,30 @@
 set -eu
 
 TARGET_DIR="$1"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+ROCKOS_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "ROCKOS: running final rootfs cleanup"
+
+# ------------------------------------------------------------
+# EntropyLab: app/entropylab.html is the single source of truth.
+# Sync it into the app path and log the bundled version so every
+# build records exactly which EntropyLab shipped.
+# ------------------------------------------------------------
+
+ENTROPY_SRC="$ROCKOS_DIR/app/entropylab.html"
+ENTROPY_DST="$TARGET_DIR/opt/rockos/app/entropylab.html"
+
+if [ ! -f "$ENTROPY_SRC" ]; then
+    echo "ROCKOS ERROR: $ENTROPY_SRC not found" >&2
+    exit 1
+fi
+
+mkdir -p "$(dirname "$ENTROPY_DST")"
+cp "$ENTROPY_SRC" "$ENTROPY_DST"
+
+ENTROPY_VERSION="$(sed -n 's/.*<meta name="application-version" content="\([^"]*\)".*/\1/p' "$ENTROPY_SRC" | head -n1)"
+echo "ROCKOS: EntropyLab version: ${ENTROPY_VERSION:-unknown}"
 
 # ------------------------------------------------------------
 # Remove obsolete Cog / WPE WebKit runtime remnants

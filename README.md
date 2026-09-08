@@ -76,3 +76,42 @@ touchscreen lives alongside the x86 build:
 The Waveshare panel is enabled via `vc4-kms-dsi-waveshare-panel,7_0_inchC` in
 `board/rockos/rpi5/config.txt`. All other RockOS hardening and the EntropyLab
 app are unchanged from the x86 build.
+
+## Building the rpi5 image
+
+    ./scripts/build-rpi5-image.sh
+
+The script clones Buildroot into `buildroot-rpi5/` on first run, applies
+`config/rockos-rpi5_defconfig`, and builds. The repo is a `BR2_EXTERNAL`
+tree, so the script passes `BR2_EXTERNAL=..` to make. Output:
+
+    buildroot-rpi5/output/images/rockos-rpi5-sdcard.img
+
+Flash with `dd` (or Rufus/balenaEtcher) to an SD card:
+
+    sudo dd if=buildroot-rpi5/output/images/rockos-rpi5-sdcard.img \
+        of=/dev/sdX bs=4M status=progress conv=fsync
+
+Rebuilds are incremental — ccache is enabled (cache at
+`~/.buildroot-ccache`, outside the build tree). Manage it with:
+
+    ./scripts/ccache-maint.sh status    # current size and stats
+    ./scripts/ccache-maint.sh cap 12G   # set max size (auto-evicts LRU)
+    ./scripts/ccache-maint.sh clean     # empty the cache
+
+## Updating EntropyLab
+
+`app/entropylab.html` is the single source of truth for the bundled app.
+`scripts/post-build.sh` copies it into the image at build time and logs the
+bundled version (read from the file's `application-version` meta tag), so
+every build records which EntropyLab shipped.
+
+To update:
+
+    cp /path/to/new-entropylab.html app/entropylab.html
+    git commit -am "EntropyLab vX.Y.Z"
+    cd buildroot-rpi5 && make BR2_EXTERNAL=..
+
+The rebuild only regenerates the rootfs and image (minutes, not hours).
+Check the build output for the `ROCKOS: EntropyLab version: vX.Y.Z` line
+to confirm what shipped.

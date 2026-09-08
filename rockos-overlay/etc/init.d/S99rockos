@@ -14,10 +14,16 @@ chmod 700 "$XDG_RUNTIME_DIR"
 
 echo "ROCKOS: starting Weston..."
 
+# Capture Weston's own diagnostics so boot failures are debuggable
+# from the SD card after the fact.
+WESTON_LOG=/var/log/weston.log
+mkdir -p /var/log
+
 weston \
     --backend=drm-backend.so \
     --shell=kiosk-shell.so \
-    --socket=wayland-0 &
+    --socket=wayland-0 \
+    >"$WESTON_LOG" 2>&1 &
 
 WESTON_PID=$!
 
@@ -31,6 +37,9 @@ while [ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; do
     if ! kill -0 "$WESTON_PID" 2>/dev/null; then
         echo
         echo "ROCKOS ERROR: Weston exited before Wayland became ready."
+        echo "----- weston.log -----"
+        tail -n 20 "$WESTON_LOG" 2>/dev/null
+        echo "----------------------"
         exit 1
     fi
 

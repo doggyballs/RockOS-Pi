@@ -1,0 +1,20 @@
+--- a/server.h	2026-09-13 22:04:13.338000000 +0000
++++ b/server.h	2026-09-13 22:04:13.367000000 +0000
+@@ -4,6 +4,7 @@
+ #include "config.h"
+ 
+ #include <wayland-server-core.h>
++#include <wlr/types/wlr_layer_shell_v1.h>
+ #include <wlr/config.h>
+ #include <wlr/types/wlr_drm_lease_v1.h>
+ #include <wlr/types/wlr_idle_inhibit_v1.h>
+@@ -52,6 +53,9 @@
+ 	struct wl_listener new_xdg_toplevel;
+ 	struct wl_listener new_xdg_popup;
+ 
++	struct wlr_layer_shell_v1 *layer_shell;
++	struct wl_listener new_layer_surface;
++
+ 	struct wl_listener new_virtual_keyboard;
+ 	struct wl_listener new_virtual_pointer;
+ #if CAGE_HAS_XWAYLAND

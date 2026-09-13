@@ -1,0 +1,52 @@
+--- a/cage.c	2026-09-13 22:04:13.337000000 +0000
++++ b/cage.c	2026-09-13 22:04:13.354000000 +0000
+@@ -29,6 +29,8 @@
+ #include <wlr/types/wlr_gamma_control_v1.h>
+ #include <wlr/types/wlr_idle_inhibit_v1.h>
+ #include <wlr/types/wlr_idle_notify_v1.h>
++#include <wlr/types/wlr_layer_shell_v1.h>
++#include <wlr/types/wlr_scene.h>
+ #include <wlr/types/wlr_output_layout.h>
+ #include <wlr/types/wlr_output_management_v1.h>
+ #include <wlr/types/wlr_presentation_time.h>
+@@ -74,6 +76,24 @@
+ 	wl_display_terminate(server->wl_display);
+ }
+ 
++
++static void
++handle_new_layer_surface(struct wl_listener *listener, void *data)
++{
++	struct cg_server *server = wl_container_of(listener, server, new_layer_surface);
++	struct wlr_layer_surface_v1 *layer_surface = data;
++
++	if (!layer_surface->output) {
++		struct cg_output *output;
++		wl_list_for_each(output, &server->outputs, link) {
++			layer_surface->output = output->wlr_output;
++			break;
++		}
++	}
++
++	wlr_scene_layer_surface_v1_create(&server->scene->tree, layer_surface);
++}
++
+ static void
+ handle_display_destroy(struct wl_listener *listener, void *data)
+ {
+@@ -443,6 +463,15 @@
+ 	server.new_xdg_popup.notify = handle_new_xdg_popup;
+ 	wl_signal_add(&xdg_shell->events.new_popup, &server.new_xdg_popup);
+ 
++	/* Layer shell: needed by wvkbd and other overlay surfaces */
++	server.layer_shell = wlr_layer_shell_v1_create(server.wl_display, 4);
++	if (server.layer_shell) {
++		server.new_layer_surface.notify = handle_new_layer_surface;
++		wl_signal_add(&server.layer_shell->events.new_surface,
++			&server.new_layer_surface);
++	}
++
++
+ 	struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager =
+ 		wlr_xdg_decoration_manager_v1_create(server.wl_display);
+ 	if (!xdg_decoration_manager) {

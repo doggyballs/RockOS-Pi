@@ -1,35 +1,48 @@
 #!/bin/sh
 
-# Show RockOS startup diagnostics on the physical/VM display.
 exec >/dev/tty1 2>&1
 
 echo
 echo "===== ROCKOS KIOSK STARTUP ====="
 
 export XDG_RUNTIME_DIR=/run/user/0
-export WAYLAND_DISPLAY=wayland-0
+export WAYLAND_DISPLAY=wayland-1
 
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
-
 mkdir -p /var/log
-
-wvkbd --hidden &
-WVKBD_PID=$!
-echo $WVKBD_PID > /tmp/wvkbd.pid
-echo "ROCKOS: virtual keyboard started (pid $WVKBD_PID, hidden)"
-
-kbd-toggle &
-
-echo "ROCKOS: keyboard toggle button started"
 
 export QT_QPA_PLATFORM=wayland
 export QTWEBENGINE_DISABLE_SANDBOX=1
 export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
+export WLR_BACKENDS=drm
+export WLR_DRM_DEVICES=/dev/dri/card1
+export SWAYSOCK=/run/user/0/sway-ipc.sock
 
-echo "ROCKOS: starting cage (kiosk compositor) + EntropyLab..."
+sway --config /etc/sway/config > /var/log/sway.log 2>&1 &
+SWAY_PID=$!
 
-cage -- /usr/bin/rockos-browser > /var/log/cage.log 2>&1
+i=0
+while [ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; do
+    sleep 0.1
+    i=$((i + 1))
+    if ! kill -0 "$SWAY_PID" 2>/dev/null; then
+        echo "ROCKOS ERROR: sway exited"
+        tail -n 20 /var/log/sway.log 2>/dev/null
+        exit 1
+    fi
+    if [ "$i" -ge 100 ]; then
+        echo "ROCKOS ERROR: sway timeout"
+        kill "$SWAY_PID" 2>/dev/null
+        exit 1
+    fi
+done
 
-COMPOSITOR_EXIT=$?
-echo "ROCKOS: cage exited with code $COMPOSITOR_EXIT"
+wvkbd --hidden &
+echo $! > /tmp/wvkbd.pid
+
+kbd-toggle &
+
+/usr/bin/rockos-browser &
+
+wait "$SWAY_PID"

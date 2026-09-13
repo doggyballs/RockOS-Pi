@@ -7,36 +7,67 @@ echo
 echo "===== ROCKOS KIOSK STARTUP ====="
 
 export XDG_RUNTIME_DIR=/run/user/0
-export WAYLAND_DISPLAY=wayland-0
+export WAYLAND_DISPLAY=wayland-1
 
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
 mkdir -p /var/log
 
-# Launch wvkbd (Wayland virtual keyboard) in hidden mode.
-# Toggle visibility via the floating ⌨ button (kbd-toggle overlay)
-# or by sending SIGRTMIN to the wvkbd process.
-wvkbd --hidden &
-WVKBD_PID=$!
-echo $WVKBD_PID > /tmp/wvkbd.pid
-echo "ROCKOS: virtual keyboard started (pid $WVKBD_PID, hidden)"
-
-# Launch the keyboard toggle button (floating overlay in bottom-right)
-kbd-toggle &
-
-echo "ROCKOS: keyboard toggle button started"
-
 export QT_QPA_PLATFORM=wayland
 export QTWEBENGINE_DISABLE_SANDBOX=1
 export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
 
-echo "ROCKOS: starting cage (kiosk compositor) + EntropyLab..."
+# Force wlroots to use the DRM backend directly (not nested Wayland).
+export WLR_BACKENDS=drm
+export WLR_DRM_DEVICES=/dev/dri/card1
+# Disable sway's i3bar and DBus (not needed for a kiosk)
+export SWAYSOCK=/run/user/0/sway-ipc.sock
 
-# cage is a wlroots kiosk compositor that runs a single app fullscreen.
-# It supports wlr-layer-shell (needed by wvkbd and kbd-toggle).
-# The browser is launched as cage's single client; cage exits when it does.
-cage -- /usr/bin/rockos-browser > /var/log/cage.log 2>&1
+echo "ROCKOS: starting sway (kiosk compositor)..."
 
-COMPOSITOR_EXIT=$?
-echo "ROCKOS: cage exited with code $COMPOSITOR_EXIT"
+# Launch sway as the compositor. It runs in the foreground.
+# wvkbd + kbd-toggle + browser are started via sway config's exec.
+sway --config /etc/sway/config > /var/log/sway.log 2>&1 &
+
+SWAY_PID=$!
+echo "ROCKOS: sway PID $SWAY_PID"
+
+# Wait for the Wayland socket to appear
+i=0
+while [ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; do
+    sleep 0.1
+    i=$((i + 1))
+    if ! kill -0 "$SWAY_PID" 2>/dev/null; then
+        echo
+        echo "ROCKOS ERROR: sway exited before Wayland became ready."
+        echo "----- sway.log -----"
+        tail -n 20 /var/log/sway.log 2>/dev/null
+        echo "----------------------"
+        exit 1
+    fi
+    if [ "$i" -ge 100 ]; then
+        echo
+        echo "ROCKOS ERROR: sway did not become ready after 10 seconds."
+        tail -n 20 /var/log/sway.log 2>/dev/null
+        kill "$SWAY_PID" 2>/dev/null
+        exit 1
+    fi
+done
+
+echo "ROCKOS: Wayland ready."
+
+# Launch wvkbd (hidden) and kbd-toggle
+wvkbd --hidden &
+echo $! > /tmp/wvkbd.pid
+echo "ROCKOS: virtual keyboard started (hidden)"
+
+kbd-toggle &
+echo "ROCKOS: keyboard toggle button started"
+
+# Launch the browser
+/usr/bin/rockos-browser &
+BROWSER_PID=$!
+echo "ROCKOS: browser PID $BROWSER_PID"
+
+wait "$SWAY_PID"

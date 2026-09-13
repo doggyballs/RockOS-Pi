@@ -113,6 +113,21 @@ rm -f "$TARGET_DIR/usr/bin/sqlite3"
 
 
 # ------------------------------------------------------------
+# !!! DEBUG ONLY — REMOVE BEFORE PRODUCTION / BEFORE ANY UPSTREAM PR !!!
+# Dropbear SSH for headless bring-up debugging. Rootfs overlays land
+# with default 0644 perms; dropbear requires strict key file perms.
+# Remove this block together with BR2_PACKAGE_DROPBEAR and
+# rockos-overlay/etc/dropbear/ — see
+# board/rockos/rpi5/DEBUG-REMOVAL-CHECKLIST.md
+# ------------------------------------------------------------
+
+if [ -d "$TARGET_DIR/root/.ssh" ]; then
+    chmod 700 "$TARGET_DIR/root" "$TARGET_DIR/root/.ssh"
+    chmod 600 "$TARGET_DIR/root/.ssh/authorized_keys"
+    echo "ROCKOS: dropbear DEBUG key perms fixed (REMOVE BEFORE PRODUCTION)"
+fi
+
+# ------------------------------------------------------------
 # Remove unused PCI / USB descriptive hardware ID databases
 # Keep pnp.ids because it is selected by a runtime dependency
 # ------------------------------------------------------------

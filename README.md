@@ -106,10 +106,22 @@ Rebuilds are incremental — ccache is enabled (cache at
 bundled version (read from the file's `application-version` meta tag), so
 every build records which EntropyLab shipped.
 
-To update:
+**PINNED at v0.1.3 + QR backport.** Upstream EntropyLab main (after
+2026-09-03) requires WebAssembly reference-types and ES2022
+(`Object.hasOwn`), which QtWebEngine 5.15 (Chromium 87) cannot run — the
+app's secp256k1 sanity check hard-fails. v0.1.3 is the last compatible
+upstream build. The offline QR-popup feature from upstream PR 255 is
+backported onto it (pure DOM + vendored uqr, no wasm dependency):
+`app/patches/qr-references.{js,css}`, `app/vendor/uqr-0.1.3.js` (MIT),
+applied by `scripts/apply-qr-backport.py`.
 
-    cp /path/to/new-entropylab.html app/entropylab.html
-    git commit -am "EntropyLab vX.Y.Z"
+To update to a new upstream EntropyLab (only valid once upstream runs on
+Chromium 87 again, or RockOS moves to a newer webview engine):
+
+    cp /path/to/new-entropylab.html /tmp/entropylab-pristine.html
+    python3 scripts/apply-qr-backport.py /tmp/entropylab-pristine.html app/entropylab.html
+    # note: script refuses to double-patch (fails if 'qr-ref-overlay' present)
+    git commit -am "EntropyLab vX.Y.Z + QR backport"
     cd buildroot-rpi5 && make BR2_EXTERNAL=..
 
 The rebuild only regenerates the rootfs and image (minutes, not hours).

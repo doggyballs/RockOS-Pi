@@ -1,0 +1,10 @@
+config BR2_PACKAGE_KBD_TOGGLE
+	bool "kbd-toggle"
+	depends on BR2_PACKAGE_WAYLAND
+	select BR2_PACKAGE_CAIRO
+	help
+	  A tiny Wayland overlay button that toggles wvkbd visibility.
+	  Draws a floating keyboard icon in the bottom-right corner of
+	  the screen. On click/tap, sends SIGRTMIN to the wvkbd process.
+
+	  https://github.com/doggyballs/RockOS (package/kbd-toggle/)

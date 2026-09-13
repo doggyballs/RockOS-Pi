@@ -67,14 +67,17 @@ BROWSER_PID=$!
 
 echo "ROCKOS: browser PID $BROWSER_PID"
 
-# Launch wvkbd (Wayland virtual keyboard).
-# Started visible at bottom of screen with the mobile/international layout.
-# Toggle visibility via SIGRTMIN if needed.
-# Note: Weston 16.0 only supports input-method-v1 (not v2), so --auto
-# mode doesn't work. The keyboard stays visible; can be hidden by
-# sending SIGUSR1 to the wvkbd process if screen space is needed.
-wvkbd --mobintl -l landscape -c 60 &
+# Launch wvkbd (Wayland virtual keyboard) in hidden mode.
+# Toggle visibility via the floating ⌨ button (kbd-toggle overlay)
+# or by sending SIGRTMIN to the wvkbd process.
+wvkbd --mobintl --hidden &
+WVKBD_PID=$!
+echo $WVKBD_PID > /tmp/wvkbd.pid
+echo "ROCKOS: virtual keyboard started (pid $WVKBD_PID, hidden)"
 
-echo "ROCKOS: virtual keyboard started"
+# Launch the keyboard toggle button (floating overlay in bottom-right)
+kbd-toggle &
+
+echo "ROCKOS: keyboard toggle button started"
 
 wait "$WESTON_PID"

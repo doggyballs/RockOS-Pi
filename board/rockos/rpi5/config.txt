@@ -6,7 +6,8 @@ disable_overscan=1
 # KMS graphics for Weston (Pi 5 variant)
 dtoverlay=vc4-kms-v3d-pi5
 
-# Waveshare 7" DSI touchscreen (display + I2C touch)
-dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC
+# Waveshare 7" DSI touchscreen — disabled while using HDMI panel.
+# Re-enable when the DSI-C panel is connected (needs 22-pin cable + power):
+# dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC
 
 dtparam=audio=off

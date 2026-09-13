@@ -56,7 +56,6 @@ echo "ROCKOS: Wayland ready."
 sleep 1
 
 export QT_QPA_PLATFORM=wayland
-export QT_IM_MODULE=qtvirtualkeyboard
 export QTWEBENGINE_DISABLE_SANDBOX=1
 export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
 
@@ -67,5 +66,15 @@ echo "ROCKOS: starting EntropyLab..."
 BROWSER_PID=$!
 
 echo "ROCKOS: browser PID $BROWSER_PID"
+
+# Launch wvkbd (Wayland virtual keyboard).
+# Started visible at bottom of screen with the mobile/international layout.
+# Toggle visibility via SIGRTMIN if needed.
+# Note: Weston 16.0 only supports input-method-v1 (not v2), so --auto
+# mode doesn't work. The keyboard stays visible; can be hidden by
+# sending SIGUSR1 to the wvkbd process if screen space is needed.
+wvkbd --mobintl -l landscape -c 60 &
+
+echo "ROCKOS: virtual keyboard started"
 
 wait "$WESTON_PID"

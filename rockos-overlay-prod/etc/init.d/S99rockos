@@ -56,7 +56,6 @@ echo "ROCKOS: Wayland ready."
 sleep 1
 
 export QT_QPA_PLATFORM=wayland
-export QT_IM_MODULE=qtvirtualkeyboard
 export QTWEBENGINE_DISABLE_SANDBOX=1
 export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
 
@@ -67,5 +66,9 @@ echo "ROCKOS: starting EntropyLab..."
 BROWSER_PID=$!
 
 echo "ROCKOS: browser PID $BROWSER_PID"
+
+wvkbd --mobintl -l landscape -c 60 &
+
+echo "ROCKOS: virtual keyboard started"
 
 wait "$WESTON_PID"

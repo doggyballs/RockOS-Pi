@@ -1,0 +1,15 @@
+config BR2_PACKAGE_WVKBD
+	bool "wvkbd"
+	depends on BR2_PACKAGE_WAYLAND
+	select BR2_PACKAGE_LIBXKBCOMMON
+	select BR2_PACKAGE_PANGO
+	select BR2_PACKAGE_CAIRO
+	help
+	  On-screen virtual keyboard for Wayland compositors (wlroots-based).
+	  Minimal C implementation with pango/cairo rendering.
+
+	  Auto-show/hide on text input fields via zwp_input_method_v2
+	  protocol (use --auto flag, requires compositor support), or
+	  toggle via SIGRTMIN signal.
+
+	  https://github.com/jjsullivan5196/wvkbd

@@ -17,10 +17,12 @@ mkdir -p /var/log
 export QT_QPA_PLATFORM=wayland
 export QTWEBENGINE_DISABLE_SANDBOX=1
 export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
-
-# Force wlroots to use the DRM backend directly (not nested Wayland).
-export WLR_BACKENDS=drm
+# Force cage to use the DRM + libinput backend (direct hardware rendering +
+# input device discovery). WLR_DRM_NO_MODIFIERS=1 is needed on vc4 (Pi 5)
+# because the DRM driver can't scan out tiled buffers — only linear.
+export WLR_BACKENDS=drm,libinput
 export WLR_DRM_DEVICES=/dev/dri/card1
+export WLR_DRM_NO_MODIFIERS=1
 # Disable sway's i3bar and DBus (not needed for a kiosk)
 export SWAYSOCK=/run/user/0/sway-ipc.sock
 

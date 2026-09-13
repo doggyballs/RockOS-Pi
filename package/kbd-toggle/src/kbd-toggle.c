@@ -271,12 +271,22 @@ int main(int argc, char *argv[]) {
     zwlr_layer_surface_v1_set_margin(layer_surface, 0, BTN_MARGIN, BTN_MARGIN, 0);
     zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface, 0);
     zwlr_layer_surface_v1_add_listener(layer_surface, &layer_surface_listener, NULL);
+
+    /* Commit the surface so the compositor sends a configure event */
     wl_surface_commit(surface);
     wl_display_roundtrip(display);
 
     if (!configured) {
-        fprintf(stderr, "kbd-toggle: layer surface not configured\n");
-        return 1;
+        /* The configure callback fires during roundtrip above.
+         * If it still hasn't fired, enter the event loop and wait for it
+         * rather than failing immediately. */
+        fprintf(stderr, "kbd-toggle: waiting for configure event...\n");
+        while (!configured) {
+            if (wl_display_dispatch(display) == -1) {
+                fprintf(stderr, "kbd-toggle: display dispatch failed\n");
+                return 1;
+            }
+        }
     }
 
     /* Find wvkbd PID at startup */

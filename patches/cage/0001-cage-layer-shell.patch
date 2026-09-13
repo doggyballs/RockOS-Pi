@@ -1,5 +1,5 @@
---- a/cage.c	2026-09-13 22:04:13.337000000 +0000
-+++ b/cage.c	2026-09-13 22:04:13.354000000 +0000
+--- a/cage.c	2026-09-13 22:57:56.159000000 +0000
++++ b/cage.c	2026-09-13 22:57:56.170000000 +0000
 @@ -29,6 +29,8 @@
  #include <wlr/types/wlr_gamma_control_v1.h>
  #include <wlr/types/wlr_idle_inhibit_v1.h>
@@ -9,12 +9,10 @@
  #include <wlr/types/wlr_output_layout.h>
  #include <wlr/types/wlr_output_management_v1.h>
  #include <wlr/types/wlr_presentation_time.h>
-@@ -74,6 +76,24 @@
- 	wl_display_terminate(server->wl_display);
+@@ -75,6 +77,33 @@
  }
  
-+
-+static void
+ static void
 +handle_new_layer_surface(struct wl_listener *listener, void *data)
 +{
 +	struct cg_server *server = wl_container_of(listener, server, new_layer_surface);
@@ -28,13 +26,24 @@
 +		}
 +	}
 +
-+	wlr_scene_layer_surface_v1_create(&server->scene->tree, layer_surface);
++	struct wlr_scene_layer_surface_v1 *scene_layer =
++		wlr_scene_layer_surface_v1_create(&server->scene->tree, layer_surface);
++
++	if (layer_surface->output) {
++		struct wlr_box full_area = {0};
++		wlr_output_effective_resolution(layer_surface->output,
++			&full_area.width, &full_area.height);
++		struct wlr_box usable_area = full_area;
++		wlr_scene_layer_surface_v1_configure(scene_layer, &full_area, &usable_area);
++	}
 +}
 +
- static void
++
++static void
  handle_display_destroy(struct wl_listener *listener, void *data)
  {
-@@ -443,6 +463,15 @@
+ 	struct cg_server *server = wl_container_of(listener, server, display_destroy);
+@@ -443,6 +472,15 @@
  	server.new_xdg_popup.notify = handle_new_xdg_popup;
  	wl_signal_add(&xdg_shell->events.new_popup, &server.new_xdg_popup);
  

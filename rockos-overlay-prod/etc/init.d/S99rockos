@@ -15,8 +15,9 @@ mkdir -p /var/log
 export QT_QPA_PLATFORM=wayland
 export QTWEBENGINE_DISABLE_SANDBOX=1
 export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
-export WLR_BACKENDS=drm
+export WLR_BACKENDS=drm,libinput
 export WLR_DRM_DEVICES=/dev/dri/card1
+export WLR_DRM_NO_MODIFIERS=1
 export SWAYSOCK=/run/user/0/sway-ipc.sock
 
 sway --config /etc/sway/config > /var/log/sway.log 2>&1 &

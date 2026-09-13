@@ -12,60 +12,7 @@ export WAYLAND_DISPLAY=wayland-0
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
-echo "ROCKOS: starting Weston..."
-
-# Capture Weston's own diagnostics so boot failures are debuggable
-# from the SD card after the fact.
-WESTON_LOG=/var/log/weston.log
 mkdir -p /var/log
-
-weston \
-    --backend=drm-backend.so \
-    --shell=kiosk-shell.so \
-    --socket=wayland-0 \
-    >"$WESTON_LOG" 2>&1 &
-
-WESTON_PID=$!
-
-echo "ROCKOS: Weston PID $WESTON_PID"
-
-i=0
-while [ ! -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; do
-    sleep 0.1
-    i=$((i + 1))
-
-    if ! kill -0 "$WESTON_PID" 2>/dev/null; then
-        echo
-        echo "ROCKOS ERROR: Weston exited before Wayland became ready."
-        echo "----- weston.log -----"
-        tail -n 20 "$WESTON_LOG" 2>/dev/null
-        echo "----------------------"
-        exit 1
-    fi
-
-    if [ "$i" -ge 100 ]; then
-        echo
-        echo "ROCKOS ERROR: Weston did not become ready after 10 seconds."
-        kill "$WESTON_PID" 2>/dev/null
-        exit 1
-    fi
-done
-
-echo "ROCKOS: Wayland ready."
-
-sleep 1
-
-export QT_QPA_PLATFORM=wayland
-export QTWEBENGINE_DISABLE_SANDBOX=1
-export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
-
-echo "ROCKOS: starting EntropyLab..."
-
-/usr/bin/rockos-browser &
-
-BROWSER_PID=$!
-
-echo "ROCKOS: browser PID $BROWSER_PID"
 
 # Launch wvkbd (Wayland virtual keyboard) in hidden mode.
 # Toggle visibility via the floating ⌨ button (kbd-toggle overlay)
@@ -80,4 +27,16 @@ kbd-toggle &
 
 echo "ROCKOS: keyboard toggle button started"
 
-wait "$WESTON_PID"
+export QT_QPA_PLATFORM=wayland
+export QTWEBENGINE_DISABLE_SANDBOX=1
+export QTWEBENGINE_CHROMIUM_FLAGS="--no-sandbox --in-process-gpu --disable-gpu-sandbox --use-gl=egl"
+
+echo "ROCKOS: starting cage (kiosk compositor) + EntropyLab..."
+
+# cage is a wlroots kiosk compositor that runs a single app fullscreen.
+# It supports wlr-layer-shell (needed by wvkbd and kbd-toggle).
+# The browser is launched as cage's single client; cage exits when it does.
+cage -- /usr/bin/rockos-browser > /var/log/cage.log 2>&1
+
+COMPOSITOR_EXIT=$?
+echo "ROCKOS: cage exited with code $COMPOSITOR_EXIT"

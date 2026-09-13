@@ -28,6 +28,7 @@ rpi5 port layout:
 - The Waveshare panel driver `panel-waveshare-dsi.ko` is OUT OF TREE (ships only as an rpi-firmware blob). A black DSI screen on first boot most likely = missing module, not a bad config.
 - DEBUG-ONLY: dropbear SSH is temporarily in the rpi5 defconfig + `rockos-overlay/root/.ssh/` for headless bring-up (added 2026-09-09). MUST be removed before production / upstream PR — see `board/rockos/rpi5/DEBUG-REMOVAL-CHECKLIST.md`.
 - QtWebEngine 5.15 = Chromium 87 ceiling: upstream EntropyLab main (post 2026-09-03) needs WASM reference-types + ES2022 (`Object.hasOwn`) → secp256k1 sanity check hard-fails on our browser. App is PINNED to v0.1.3 + QR-popup backport (PR 255, pure DOM + vendored uqr). See README "Updating EntropyLab". rockos-browser also drops all `target=_blank` clicks (bare QWebEngineView, no createWindow override) — dead link clicks in online mode are expected, QR popup only fires when app reports offline.
+- Virtual keyboard BLOCKED on Weston: wvkbd + kbd-toggle are built and in the image but DON'T WORK because Weston 16.0 lacks `wlr-layer-shell` protocol (it's wlroots-specific). Both need a wlroots compositor (sway/labwc). Next step: swap Weston → sway or labwc, then wvkbd + kbd-toggle work unmodified. wvkbd also needs `--hidden` (not `--mobintl` — layout is compile-time, not a runtime flag).
 
 ## Build host
 

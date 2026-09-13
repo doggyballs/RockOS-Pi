@@ -70,7 +70,7 @@ echo "ROCKOS: browser PID $BROWSER_PID"
 # Launch wvkbd (Wayland virtual keyboard) in hidden mode.
 # Toggle visibility via the floating ⌨ button (kbd-toggle overlay)
 # or by sending SIGRTMIN to the wvkbd process.
-wvkbd --mobintl --hidden &
+wvkbd --hidden &
 WVKBD_PID=$!
 echo $WVKBD_PID > /tmp/wvkbd.pid
 echo "ROCKOS: virtual keyboard started (pid $WVKBD_PID, hidden)"

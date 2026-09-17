@@ -30,7 +30,11 @@ echo "ROCKOS: EntropyLab version: ${ENTROPY_VERSION:-unknown}"
 
 # ------------------------------------------------------------
 # Remove obsolete Cog / WPE WebKit runtime remnants
+# (only when building the QtWebEngine variant — the cog variant
+#  needs these files, so skip if cog is installed in the target)
 # ------------------------------------------------------------
+
+if [ ! -x "$TARGET_DIR/usr/bin/cog" ]; then
 
 rm -f \
     "$TARGET_DIR/usr/bin/cog" \
@@ -46,6 +50,11 @@ rm -f \
     "$TARGET_DIR"/usr/lib/libcogcore.so* \
     "$TARGET_DIR"/usr/lib/libWPEWebKit-2.0.so* \
     "$TARGET_DIR"/usr/lib/libWPEBackend-fdo-1.0.so*
+
+rm -f \
+    "$TARGET_DIR"/usr/lib/libwpe-1.0.so*
+
+fi # end: skip WPE cleanup for cog builds
 
 # ------------------------------------------------------------
 # RockOS only needs English QtWebEngine locales
@@ -69,13 +78,6 @@ echo "ROCKOS: final rootfs cleanup complete"
 
 rm -f "$TARGET_DIR/lib/udev/hwdb.bin"
 rm -rf "$TARGET_DIR/etc/udev/hwdb.d"
-
-
-# ------------------------------------------------------------
-# Remove obsolete standalone libwpe runtime
-# ------------------------------------------------------------
-
-rm -f "$TARGET_DIR"/usr/lib/libwpe-1.0.so*
 
 
 # ------------------------------------------------------------

@@ -2,10 +2,11 @@
 # RockOS rpi5 build script.
 #
 # Usage:
-#   ./scripts/build-rpi5-image.sh [dev|prod]
+#   ./scripts/build-rpi5-image.sh [dev|prod|cog]
 #
-#   dev  (default) -> config/rockos-rpi5_defconfig (DHCP+dropbear for debug)
-#   prod           -> config/rockos-rpi5-prod_defconfig (offline, dropbear-free)
+#   dev  (default) -> config/rockos-rpi5_defconfig (QtWebEngine, DHCP+dropbear)
+#   prod           -> config/rockos-rpi5-prod_defconfig (QtWebEngine, offline)
+#   cog            -> config/rockos-rpi5-cog_defconfig (WPE WebKit+cog, DHCP+dropbear)
 #
 # Result: buildroot-rpi5/output/images/rockos-rpi5-sdcard.img
 
@@ -19,8 +20,11 @@ case "$MODE" in
     prod)
         DEFCONFIG="rockos-rpi5-prod_defconfig"
         ;;
+    cog)
+        DEFCONFIG="rockos-rpi5-cog_defconfig"
+        ;;
     *)
-        echo "Usage: $0 [dev|prod]" >&2
+        echo "Usage: $0 [dev|prod|cog]" >&2
         exit 1
         ;;
 esac

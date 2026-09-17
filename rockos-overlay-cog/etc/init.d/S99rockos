@@ -1,0 +1,80 @@
+#!/bin/sh
+
+# RockOS kiosk startup — cog/WPE WebKit variant.
+# cage = compositor (wlroots); cog = WPE WebKit browser client.
+exec >/dev/tty1 2>&1
+
+echo
+echo "===== ROCKOS KIOSK STARTUP (cog/WPE) ====="
+
+export XDG_RUNTIME_DIR=/run/user/0
+
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
+
+mkdir -p /var/log
+
+# cage/wlroots DRM backend (vc4 needs linear buffers — no modifiers)
+export WLR_BACKENDS=drm,libinput
+export WLR_DRM_DEVICES=/dev/dri/card1
+export WLR_DRM_NO_MODIFIERS=1
+
+echo "ROCKOS: XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+# Force software rendering — Mesa's EGL on Pi 5 doesn't support
+# eglCreateWaylandBufferFromImageWL which cog's Wayland platform needs.
+export LIBGL_ALWAYS_SOFTWARE=1
+
+echo "ROCKOS: starting cage (kiosk compositor)..."
+
+# Run cage with debug logging (-D) and spawn cog as its primary client.
+cage -D -- cog -P fdo file:///opt/rockos/app/entropylab.html > /var/log/cage.log 2>&1 &
+COMPOSITOR_PID=$!
+echo "ROCKOS: cage PID $COMPOSITOR_PID"
+
+# Wait for cage to create its Wayland socket. wl_display_add_socket_auto()
+# picks the first free 'wayland-N' name — we watch the filesystem.
+SOCKET=""
+i=0
+while [ -z "$SOCKET" ]; do
+    sleep 0.2
+    i=$((i + 1))
+    SOCKET=$(ls "$XDG_RUNTIME_DIR" 2>/dev/null | grep -E '^wayland-[0-9]+$' | head -1)
+    if ! kill -0 "$COMPOSITOR_PID" 2>/dev/null; then
+        echo
+        echo "ROCKOS ERROR: cage exited before creating a Wayland socket."
+        echo "----- cage.log (full) -----"
+        cat /var/log/cage.log 2>/dev/null
+        echo "----------------------"
+        exit 1
+    fi
+    if [ "$i" -ge 150 ]; then
+        echo
+        echo "ROCKOS ERROR: cage did not create a Wayland socket after 30 seconds."
+        echo "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
+        echo "Contents of $XDG_RUNTIME_DIR:"
+        ls -la "$XDG_RUNTIME_DIR" 2>/dev/null || echo "  (empty or missing)"
+        echo "----- cage.log (full) -----"
+        cat /var/log/cage.log 2>/dev/null
+        echo "----------------------"
+        kill "$COMPOSITOR_PID" 2>/dev/null
+        exit 1
+    fi
+done
+
+echo "ROCKOS: Wayland socket is $SOCKET"
+export WAYLAND_DISPLAY="$SOCKET"
+
+# Layer-shell clients attach to cage's socket.
+wvkbd --hidden &
+echo $! > /tmp/wvkbd.pid
+echo "ROCKOS: virtual keyboard started (hidden)"
+
+kbd-toggle &
+echo "ROCKOS: keyboard toggle button started"
+
+wait "$COMPOSITOR_PID"
+echo
+echo "ROCKOS: cage exited with code $?"
+echo "----- cage.log -----"
+tail -n 40 /var/log/cage.log 2>/dev/null
+echo "----------------------"

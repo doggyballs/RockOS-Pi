@@ -49,7 +49,7 @@ rm -f "$TARGET_DIR/usr/bin/sqlite3"
 # Dropbear SSH for headless bring-up debugging. Rootfs overlays land
 # with default 0644 perms; dropbear requires strict key file perms.
 # Remove this block together with BR2_PACKAGE_DROPBEAR and
-# rockos-overlay/etc/dropbear/ — see
+# rockos-overlay-cog/etc/dropbear/ — see
 # board/rockos/rpi5/DEBUG-REMOVAL-CHECKLIST.md
 # ------------------------------------------------------------
 

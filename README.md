@@ -118,11 +118,11 @@ the shipped version at build time.
 
 ## Roadmap
 
-[ ] - Hardware - Raspi5 --> board without any comms, only SD card
-[ ] - Build Tooling - automated pull, verification, and integration of latest
+[ ] - Hardware - Raspi5 --> board without any comms, only SD card   
+[ ] - Build Tooling - automated pull, verification, and integration of latest    
 entropy lab --release or --edge (latest commit)
-[ ] - Panel options and 3D printed case
-[ ] - PR to EntropyLab for optional touchscreen keyboard input on all fields
+[ ] - Panel options and 3D printed case    
+[ ] - PR to EntropyLab for optional touchscreen keyboard input on all fields    
 
 ## Credits
 

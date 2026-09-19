@@ -33,6 +33,10 @@ BR2_PACKAGE_MESA3D=y
 BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_V3D=y
 BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_VC4=y
 BR2_PACKAGE_MESA3D_OPENGL_ES=y
+# Required for EGL_WL_create_wayland_buffer_from_image (cog/WPE needs it to
+# export rendered frames as wl_buffers). Without this Mesa 26.1 compiles the
+# extension out and cog aborts on first frame export.
+BR2_PACKAGE_MESA3D_LEGACY_BIND_WAYLAND_DISPLAY=y
 # Browser engine: WPE WebKit + cog (replaces Qt5/QtWebEngine/rockos-browser)
 BR2_PACKAGE_WPEWEBKIT=y
 BR2_PACKAGE_COG=y

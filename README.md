@@ -18,8 +18,8 @@ the Pi 5 + 7" HDMI touch panel. Another view of the running appliance:
 
 ## Approach
 
-There are a few good ways to run air-gapped entropy tooling, and
-they're all have trade-offs:
+There are a few good ways to run air-gapped tooling, and
+all have trade-offs:
 
 - **Bootable USB on your own machine** (upstream RockOS's approach) —
   most convenient, no extra hardware, and the upstream has done solid
@@ -115,6 +115,14 @@ that the old Chromium-87 engine could not). To ship a newer EntropyLab:
 download the fresh `entropylab.html`, replace the file, rebuild —
 the rootfs-only rebuild takes minutes and `scripts/post-build.sh` logs
 the shipped version at build time.
+
+## Roadmap
+
+[ ] - Hardware - Raspi5 --> board without any comms, only SD card
+[ ] - Build Tooling - automated pull, verification, and integration of latest
+entropy lab --release or --edge (latest commit)
+[ ] - Panel options and 3D printed case
+[ ] - PR to EntropyLab for optional touchscreen keyboard input on all fields
 
 ## Credits
 

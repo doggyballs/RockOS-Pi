@@ -1,3 +1,2 @@
-source "$BR2_EXTERNAL_ROCKOS_PATH/package/rockos-browser/Config.in"
 source "$BR2_EXTERNAL_ROCKOS_PATH/package/wvkbd/Config.in"
 source "$BR2_EXTERNAL_ROCKOS_PATH/package/kbd-toggle/Config.in"

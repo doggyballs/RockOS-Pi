@@ -65,6 +65,8 @@ at v0.1.3 — newer EntropyLab needs WASM reference-types and ES2022
 that Chromium 87 can't run. This repo swaps in **cog + WPE WebKit
 2.50**, which lifts that ceiling and brings active security backports. 
 The kiosk stack became cage (a wlroots kiosk compositor) + cog — no X11, no Qt.
+The legacy QtWebEngine machinery has been removed; the repo builds only
+the cog/WPE engine.
 
 Getting there took more than Buildroot switches: cage needed a patch to
 advertise `wayland-drm`, Mesa needed its `legacy-wayland` EGL binding
@@ -75,14 +77,12 @@ section.
 
 ## Building
 
-Four variants via one script:
+Two variants via one script:
 
-    ./scripts/build-rpi5-image.sh dev        # QtWebEngine, debug SSH — legacy reference
     ./scripts/build-rpi5-image.sh cog        # cog/WPE engine, debug SSH — dev default
     ./scripts/build-rpi5-image.sh cog-prod   # cog/WPE, offline appliance image
-    ./scripts/build-rpi5-image.sh prod       # QtWebEngine, offline — legacy
 
-**dev** builds include debug conveniences (DHCP + dropbear SSH + a
+**cog** builds include debug conveniences (DHCP + dropbear SSH + a
 tty1 root getty) for bring-up on the bench. **cog-prod** is the
 appliance image: no SSH, no getty, no DHCP, and comms disabled at three
 layers — firmware device-tree overlays (`disable-wifi-pi5`,

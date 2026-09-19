@@ -3,7 +3,7 @@ set -eu
 
 # Force-copy the latest config.txt from the repo into the staging dir.
 # Buildroot copies this at defconfig time; if you run `make` without
-# re-running `make rockos-rpi5_defconfig`, a stale config.txt ships.
+# re-running `make rockos-rpi5-cog_defconfig`, a stale config.txt ships.
 # This guarantees the repo's config.txt is always what lands in the image.
 ROCKOS_DIR="$(CDPATH= cd -- "$(dirname "$0")/../../.." && pwd)"
 CONFIG_SRC="$ROCKOS_DIR/board/rockos/rpi5/config.txt"

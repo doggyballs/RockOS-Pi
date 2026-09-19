@@ -27,7 +27,6 @@ buildroot-rpi5/
 .qmake.stash
 Makefile
 *.o
-rockos-browser/rockos-browser
 
 # Script backups
 *.before-*

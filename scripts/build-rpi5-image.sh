@@ -48,7 +48,8 @@ make BR2_EXTERNAL="$ROCKOS_DIR" "$DEFCONFIG"
 case "$MODE" in
     cog-prod)
         # Pre-flight: production must be offline and debug-free.
-        if grep -q '^BR2_SYSTEM_DHCP=' .config; then
+        # BR2_SYSTEM_DHCP="" (empty) is OK — no interface is brought up.
+        if grep -qE '^BR2_SYSTEM_DHCP="..*"' .config; then
             echo "ERROR: cog-prod build still has DHCP enabled" >&2
             exit 1
         fi

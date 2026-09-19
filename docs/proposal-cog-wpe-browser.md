@@ -1,8 +1,9 @@
 # Proposal: replace QtWebEngine kiosk browser with cog + WPE WebKit
 
-**Status:** draft for discussion (target: SaniExp/RockOS upstream)
+**Status:** ✅ **VALIDATED on rpi5 hardware (2026-09-19)** — cog + WPE WebKit
+renders EntropyLab on the 7" HDMI touch panel. See "Validation" below.
 **Author:** doggyballs
-**Date:** 2026-09-09
+**Date:** 2026-09-09 (proposal) / 2026-09-19 (validated)
 **Related:** multi-board PR (rpi4/rpi5/cm4), EntropyLab pin at v0.1.3
 
 ## Summary
@@ -119,6 +120,40 @@ shorten meaningfully — helps the multi-board PR's CI story too.
    x86-64 UEFI target (should be identical: same Weston, same cog).
 4. **Fonts/rendering** — confirm DejaVu coverage is sufficient without
    Qt's font stack (it is; WebKit uses fontconfig directly).
+
+## Validation (2026-09-19, rpi5 hardware)
+
+Working image: `config/rockos-rpi5-cog_defconfig` → build with
+`./scripts/build-rpi5-image.sh cog`. Verified end-to-end on the rpi5
+with the 7" Waveshare HDMI panel (WS170120, USB-HID touch): cage
+compositor up, cog/WPE renders EntropyLab, page interactive.
+
+Four fixes were required beyond the naive package swap:
+
+1. **cage must advertise wayland-drm** (`patches/cage/0004-cage-wl-drm-global.patch`).
+   cog hands rendered frames to the compositor via
+   `eglCreateWaylandBufferFromImageWL`; Mesa only exposes that extension
+   when the compositor advertises the wl_drm global. cage never called
+   `wlr_drm_create()` → cog aborted on first frame export.
+2. **Mesa must be built with legacy wayland-drm binding**
+   (`BR2_PACKAGE_MESA3D_LEGACY_BIND_WAYLAND_DISPLAY=y`). Mesa 26.1 moved
+   `EGL_WL_create_wayland_buffer_from_image` behind the `legacy-wayland`
+   meson feature; without the knob the extension is compiled out of
+   libEGL entirely.
+3. **shared-mime-info required** (`BR2_PACKAGE_SHARED_MIME_INFO=y`).
+   WebKit resolves `.html` → `text/html` through the freedesktop MIME
+   database; QtWebEngine/Chromium hardcodes it. Without the DB, cog
+   displayed the raw HTML source as plain text.
+4. **wlroots runtime deps are not declared by cage's package**
+   (`BR2_PACKAGE_LCMS2=y`, `BR2_PACKAGE_XKEYBOARD_CONFIG=y`). wlroots
+   auto-detects lcms2 (color management) and needs xkb data at runtime
+   (keymaps); cage's .mk declares neither — add them explicitly.
+
+Debug aids in this variant (all DEBUG-marked, see
+`board/rockos/rpi5/DEBUG-REMOVAL-CHECKLIST.md`): dropbear SSH, tty1
+root getty via overlay inittab. Known open issue: transient ENOSPC
+errors at boot for /var/log, /etc/dropbear, dbus machine-id (tmpfs
+mount ordering suspected — under investigation).
 
 ## Rollout plan
 

@@ -20,10 +20,6 @@ export WLR_DRM_DEVICES=/dev/dri/card1
 export WLR_DRM_NO_MODIFIERS=1
 
 echo "ROCKOS: XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR"
-# Force software rendering — Mesa's EGL on Pi 5 doesn't support
-# eglCreateWaylandBufferFromImageWL which cog's Wayland platform needs.
-export LIBGL_ALWAYS_SOFTWARE=1
-
 echo "ROCKOS: starting cage (kiosk compositor)..."
 
 # Run cage with debug logging (-D) and spawn cog as its primary client.

@@ -3,11 +3,12 @@ kernel=Image
 # RockOS rpi5 firmware config
 disable_overscan=1
 
-# KMS graphics for Weston (Pi 5 variant)
+# KMS graphics for cage (Pi 5 variant)
 dtoverlay=vc4-kms-v3d-pi5
 
-# Waveshare 7" DSI touchscreen — disabled while using HDMI panel.
-# Re-enable when the DSI-C panel is connected (needs 22-pin cable + power):
-# dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC
+# Waveshare 7" DSI touchscreen (DSI display + I2C touch).
+# 7_0_inchC = 1024x600 capacitive variant (WS170120).
+# panel-waveshare-dsi.ko is auto-loaded by udev on OF match.
+dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC
 
 dtparam=audio=off

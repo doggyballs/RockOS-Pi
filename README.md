@@ -1,129 +1,164 @@
-# RockOS 0.1.0-beta.1
+# RockOS-Pi — a dedicated, air-gapped Bitcoin entropy appliance
 
-RockOS is a minimal Linux appliance operating system designed to boot directly into the bundled **EntropyLab** application.
+RockOS-Pi is a Raspberry Pi 5 + 7" touch panel appliance build of
+[RockOS](https://github.com/SaniExp/RockOS) — a minimal Linux operating
+system that boots directly into the bundled
+[EntropyLab](https://entropylab.online) application. This is a
+**separate, related repo**: we forked RockOS to take it somewhere the
+upstream x86-64 USB-boot design doesn't go, and the two will keep
+evolving independently.
 
-## Beta Status
+**Status:** working prototype — boots to an interactive EntropyLab on
+the Pi 5 + 7" HDMI touch panel. *(Photos coming.)*
 
-This is an early hardware-testing release.
+## Why dedicated hardware? The air-gap argument
 
-## Current Requirements
+There are several approaches in this space, including upstream RockOS's
+bootable USB drive and fully offline laptop builds. We went a different
+way, and we'd argue it's slightly better for overall air-gap hygiene:
 
-- x86-64 PC
-- UEFI firmware
-- USB boot support
-- Secure Boot disabled
+**The SD card is the only thing that ever moves.**
 
-## Installation / Testing
+Once the Pi + panel are assembled (eventually in a much sleeker, 3D
+printable case), the appliance is a sealed unit. It has one job and one
+shape. The only artifact that travels between your online world and
+this device is an SD card carrying a confirmed release of RockOS-Pi.
 
-RockOS is currently intended to run directly from a USB flash drive.
+Compare that with the alternatives:
 
-Write the RockOS image to a USB drive using a raw disk imaging tool such as Rufus, balenaEtcher, or `dd`.
+- A bootable USB drive on your everyday laptop: the machine is still
+  your general-purpose computer, with its general-purpose attack
+  surface, its dozens of partitions, its firmware you don't audit. The
+  failure mode is human — *"oops, I thought I booted the USB stick, but
+  I'm actually live on my laptop's main OS"* — and that mistake is
+  exactly what this design makes impossible.
+- A fully offline laptop: dedicated and excellent, but a laptop is a
+  big, expensive, general-purpose object that tempts repurposing, and
+  its Wi-Fi/Bluetooth hardware is a solder-float away from being
+  "temporarily" re-enabled.
 
-> **WARNING:** Writing the image will overwrite the selected USB drive.
+A Pi in a case with a panel bolted on cannot be mistaken for anything
+else. There is no other OS on it to accidentally boot, no other role it
+can drift into, no hardware radio to re-enable, no keyboard wedge
+between you and the entropy. It's easy to use *because* it's
+fool-proof: the user cannot get the air gap wrong, because the device
+has no second life.
 
-Do **not** install RockOS to your computer's internal storage at this stage.
+## What changed from upstream RockOS
 
-## Boot Process
+This repo started as a fork of the x86-64/UEFI/GRUB RockOS and
+diverged in three big areas. The short version: ARM port, smaller
+footprint, new browser engine.
 
-RockOS currently uses:
+### 1. ARM compatibility (Raspberry Pi 5 port)
 
-**UEFI → GRUB → RockOS boot logo → Linux EFI-stub chainload → RockOS → EntropyLab**
+The x86 boot chain (UEFI → GRUB → EFI-stub kernel) is replaced
+entirely. The Pi's own firmware boots the kernel straight from a FAT
+boot partition via `config.txt` — a strictly simpler and smaller chain
+than GRUB, which is a security win, not just a size win.
 
-## Known Issues
+- `config/rockos-rpi5_defconfig` (+ `-cog`, `-prod` variants) —
+  Buildroot defconfigs for the bcm2712 SoC
+- `board/rockos/rpi5/` — firmware config, kernel fragment, genimage
+  SD-card layout
+- `scripts/build-rpi5-image.sh` — one-command build →
+  `rockos-rpi5-sdcard.img`
+- Kernel is built from the Raspberry Pi Linux tree (6.12.y) with a
+  minimal RockOS fragment on top of `bcm2712_defconfig`, and the Mesa
+  stack is the proper v3d/vc4 GPU drivers — no software rendering
 
-- Some laptop trackpads are not yet supported.
-- Graphics acceleration is not yet optimized on all Intel GPUs.
-- Performance may therefore be slower than expected on some systems.
-- Hardware compatibility is still being expanded.
-- Network/Wi-Fi/Bluetooth removal and final offline hardening are not yet complete.
+The 7" panel rig is the **HDMI variant** of the Waveshare 1024x600
+touchscreen (WS170120, USB-HID touch), driven directly over HDMI. (The
+DSI-ribbon variant of the panel is a parked project; enabling its
+overlay without the ribbon attached creates a phantom output that
+gremlins the display mapping.)
 
-## Verified Hardware
+### 2. Minimized footprint
 
-The beta has successfully booted on physical x86-64 UEFI hardware and in virtual-machine testing.
+Everything in the image that isn't needed to boot, render one web page,
+and accept touch input has been removed or disabled:
 
-## Verify the Image
+- **Browser engine swap** (the big one — see below) dropped the entire
+  Qt5/QtWebEngine stack, ~185 MB of installed rootfs and the single
+  largest attack surface in the OS
+- Aggressive post-build pruning of locales, DevTools, QML tooling,
+  unused compositor shells, and hardware ID databases
+- No getty on serial, no unnecessary shells/terminals in the image
+- Networking is reduced to loopback + a DEBUG-only wired-SSH path that
+  ships in dev images only and is flagged for removal before any
+  release (see `board/rockos/rpi5/DEBUG-REMOVAL-CHECKLIST.md`)
 
-Compare the SHA-256 hash of the downloaded image with the value provided in `SHA256SUMS.txt`.
+The result: a ~234 MB rootfs (512 MB ext2 partition) where the previous
+QtWebEngine build carried ~420 MB — roughly half the image, a fraction
+of the attack surface, and a much faster build.
 
-## Hardware Test Feedback
+### 3. Browser engine: QtWebEngine/Chromium → cog + WPE WebKit
 
-Useful test reports should include:
+The upstream RockOS renders EntropyLab through QtWebEngine 5.15, which
+is Chromium 87 (January 2021) — frozen, with no security backports.
+That old engine also pinned EntropyLab to v0.1.3: upstream main needs
+WebAssembly reference-types and ES2022, which Chromium 87 cannot run.
 
-- Computer manufacturer and model
-- CPU
-- GPU
-- Whether RockOS reached EntropyLab
-- Keyboard status
-- Mouse/trackpad status
-- Display/resolution issues
-- Approximate boot time
-- Any visible boot errors
+We replaced it with **cog + WPE WebKit 2.50** (the Safari-lineage
+engine, actively maintained by Igalia):
 
-## Version
-**RockOS 0.1.0-beta.1**
+- **EntropyLab unpin becomes possible** — WPE 2.50 is a current engine;
+  the WASM/ES2022 ceiling disappears
+- **Modern security posture** — active upstream WebKit backports vs a
+  five-year-old frozen Chromium
+- **Native kiosk architecture** — cage (a purpose-built wlroots kiosk
+  compositor) + cog (a single-window WPE launcher) replace Qt's entire
+  presence; no X11, no XWayland, no Qt input stack
+- **Half the RAM, ~⅓–½ the compile time**, and it works with the
+  on-screen keyboard (wvkbd) via wlroots layer-shell patches
 
-## Raspberry Pi 5 (experimental)
+Getting this running took real work beyond flipping Buildroot switches
+— cage needed patches to advertise the `wayland-drm` protocol, Mesa
+needed its `legacy-wayland` EGL binding enabled, WebKit needed the
+freedesktop MIME database to even serve `text/html`, and wlroots'
+undeclared runtime deps (lcms2, xkb data) had to be hunted down one
+crash at a time. The `docs/proposal-cog-wpe-browser.md` "Validation"
+section has the full story if you enjoy that kind of thing.
 
-An experimental aarch64 port for the Raspberry Pi 5 + Waveshare 7" DSI
-touchscreen lives alongside the x86 build:
+*(Until the EntropyLab unpin test passes on hardware, the QtWebEngine
+defconfig is kept in-tree as a fallback.)*
 
-- `config/rockos-rpi5_defconfig` — Buildroot defconfig (bcm2712, mesa v3d/vc4,
-  QtWebEngine, Weston kiosk)
-- `board/rockos/rpi5/` — firmware config, kernel fragment, genimage layout
-- `scripts/build-rpi5-image.sh` — one-shot build, produces
-  `buildroot-rpi5/output/images/rockos-rpi5-sdcard.img`
+## Using it
 
-The Waveshare panel is enabled via `vc4-kms-dsi-waveshare-panel,7_0_inchC` in
-`board/rockos/rpi5/config.txt`. All other RockOS hardening and the EntropyLab
-app are unchanged from the x86 build.
-
-## Building the rpi5 image
-
-    ./scripts/build-rpi5-image.sh
-
-The script clones Buildroot into `buildroot-rpi5/` on first run, applies
-`config/rockos-rpi5_defconfig`, and builds. The repo is a `BR2_EXTERNAL`
-tree, so the script passes `BR2_EXTERNAL=..` to make. Output:
-
-    buildroot-rpi5/output/images/rockos-rpi5-sdcard.img
-
-Flash with `dd` (or Rufus/balenaEtcher) to an SD card:
+Write the image to an SD card with `dd` (or Rufus/balenaEtcher):
 
     sudo dd if=buildroot-rpi5/output/images/rockos-rpi5-sdcard.img \
         of=/dev/sdX bs=4M status=progress conv=fsync
 
-Rebuilds are incremental — ccache is enabled (cache at
-`~/.buildroot-ccache`, outside the build tree). Manage it with:
+Boot process on the Pi is intentionally boring:
 
-    ./scripts/ccache-maint.sh status    # current size and stats
-    ./scripts/ccache-maint.sh cap 12G   # set max size (auto-evicts LRU)
-    ./scripts/ccache-maint.sh clean     # empty the cache
+**Pi firmware → Linux → busybox init → cage compositor → cog → EntropyLab**
 
-## Updating EntropyLab
+Touch input works through libinput/cage; the virtual keyboard (wvkbd +
+a floating toggle button) is included.
 
-`app/entropylab.html` is the single source of truth for the bundled app.
-`scripts/post-build.sh` copies it into the image at build time and logs the
-bundled version (read from the file's `application-version` meta tag), so
-every build records which EntropyLab shipped.
+## Building
 
-**PINNED at v0.1.3 + QR backport.** Upstream EntropyLab main (after
-2026-09-03) requires WebAssembly reference-types and ES2022
-(`Object.hasOwn`), which QtWebEngine 5.15 (Chromium 87) cannot run — the
-app's secp256k1 sanity check hard-fails. v0.1.3 is the last compatible
-upstream build. The offline QR-popup feature from upstream PR 255 is
-backported onto it (pure DOM + vendored uqr, no wasm dependency):
-`app/patches/qr-references.{js,css}`, `app/vendor/uqr-0.1.3.js` (MIT),
-applied by `scripts/apply-qr-backport.py`.
+    ./scripts/build-rpi5-image.sh           # QtWebEngine dev build
+    ./scripts/build-rpi5-image.sh cog       # cog/WPE engine (validated)
+    ./scripts/build-rpi5-image.sh prod      # production: no SSH, no DHCP
 
-To update to a new upstream EntropyLab (only valid once upstream runs on
-Chromium 87 again, or RockOS moves to a newer webview engine):
+The script clones Buildroot into `buildroot-rpi5/` on first run; the
+repo is a `BR2_EXTERNAL` tree. Rebuilds are incremental with ccache
+(cache at `~/.buildroot-ccache`, managed by `scripts/ccache-maint.sh`).
 
-    cp /path/to/new-entropylab.html /tmp/entropylab-pristine.html
-    python3 scripts/apply-qr-backport.py /tmp/entropylab-pristine.html app/entropylab.html
-    # note: script refuses to double-patch (fails if 'qr-ref-overlay' present)
-    git commit -am "EntropyLab vX.Y.Z + QR backport"
-    cd buildroot-rpi5 && make BR2_EXTERNAL=..
+## Bundled app
 
-The rebuild only regenerates the rootfs and image (minutes, not hours).
-Check the build output for the `ROCKOS: EntropyLab version: vX.Y.Z` line
-to confirm what shipped.
+`app/entropylab.html` is the single source of truth for the bundled
+EntropyLab; `scripts/post-build.sh` stamps it into the image and logs
+the shipped version at build time. See "Updating EntropyLab" details in
+AGENTS.md while the v0.1.3 pin unwinds.
+
+## Credits
+
+- [RockOS](https://github.com/SaniExp/RockOS) (SaniExp) — the upstream
+  x86-64 appliance this project forked from
+- [EntropyLab](https://entropylab.online) — the bundled application
+- [cage](https://www.hjdskes.nl/projects/cage/), [wlroots](https://gitlab.freedesktop.org/wlroots/wlroots),
+  [WPE WebKit](https://wpewebkit.org/), [cog](https://github.com/Igalia/cog)
+  — the display and engine stack

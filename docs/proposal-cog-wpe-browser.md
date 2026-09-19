@@ -128,6 +128,13 @@ Working image: `config/rockos-rpi5-cog_defconfig` → build with
 with the 7" Waveshare HDMI panel (WS170120, USB-HID touch): cage
 compositor up, cog/WPE renders EntropyLab, page interactive.
 
+**Unpin validated 2026-09-19 (hardware):** latest upstream EntropyLab
+(OogaBoogaX/entropylab, rock branch, build commit 6f22520) runs
+unmodified on WPE 2.50 — the WASM secp256k1 sanity check passes and
+ES2022 (`Object.hasOwn`) works, which Chromium 87 could not do. The
+v0.1.3 pin and QR-backport machinery are gone; the proposal's original
+motivation is fully realized.
+
 Four fixes were required beyond the naive package swap:
 
 1. **cage must advertise wayland-drm** (`patches/cage/0004-cage-wl-drm-global.patch`).

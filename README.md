@@ -105,10 +105,14 @@ toggle button) is included.
 
 ## Bundled app
 
-`app/entropylab.html` is the single source of truth for the bundled
-EntropyLab; `scripts/post-build.sh` stamps it into the image and logs
-the shipped version at build time. Currently v0.1.3 + QR backport;
-the cog/WPE engine should allow tracking upstream again (test pending).
+`app/entropylab.html` is a plain copy of the latest upstream
+[EntropyLab](https://entropylab.online) artifact — no pin, no
+patches. The cog/WPE engine runs current upstream directly (validated
+on hardware 2026-09-19, including the WASM secp256k1 sanity check
+that the old Chromium-87 engine could not). To ship a newer EntropyLab:
+download the fresh `entropylab.html`, replace the file, rebuild —
+the rootfs-only rebuild takes minutes and `scripts/post-build.sh` logs
+the shipped version at build time.
 
 ## Credits
 

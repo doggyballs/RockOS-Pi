@@ -1,0 +1,14 @@
+# /etc/inittab — RockOS-Pi PRODUCTION (sysvinit/busybox init)
+#
+# No getty, no debug shell, no serial console. The appliance boots
+# straight into the kiosk (rcS -> S99rockos -> cage/cog -> EntropyLab).
+
+::sysinit:/bin/mount -t proc proc /proc
+::sysinit:/bin/mount -o remount,rw /
+::sysinit:/bin/mkdir -p /dev/pts /dev/shm
+::sysinit:/bin/mount -a
+::sysinit:/bin/hostname -F /etc/hostname
+::sysinit:/etc/init.d/rcS
+
+::shutdown:/etc/init.d/rcK
+::shutdown:/bin/umount -a -r

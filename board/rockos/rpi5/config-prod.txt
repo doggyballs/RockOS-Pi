@@ -1,0 +1,24 @@
+kernel=Image
+
+# RockOS rpi5 PRODUCTION firmware config — comms fully disabled.
+# The dev config.txt (HDMI/radio-enabled) lives one dir up as config.txt;
+# post-image-prod.sh swaps this in for prod builds.
+
+disable_overscan=1
+
+# KMS graphics for cage (Pi 5 variant)
+dtoverlay=vc4-kms-v3d-pi5
+
+# Waveshare 7" HDMI panel (1024x600, USB-HID touch WS170120) — driven
+# directly over HDMI, no DSI overlay needed. Do NOT enable the DSI
+# overlay while the HDMI panel is connected (phantom output; see
+# AGENTS.md).
+
+# --- Communications kill switches (PRODUCTION) ---
+# Firmware-level: mark the SDIO WiFi and UART BT devices as disabled so
+# the kernel never probes them (brcmfmac stays silent, no firmware
+# load attempts, no hci0).
+dtoverlay=disable-wifi-pi5
+dtoverlay=disable-bt-pi5
+
+dtparam=audio=off

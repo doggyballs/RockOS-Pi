@@ -1,0 +1,54 @@
+# RockOS rpi5 PRODUCTION kernel fragment — stacked ON TOP of
+# linux-rockos-rpi5.fragment (dev) via BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES.
+#
+# Goal: an appliance that cannot communicate externally except (optionally)
+# wired Ethernet during controlled maintenance. WiFi + Bluetooth are
+# compiled OUT; netfilter/tunneling/protocol cruft is dropped; NIC drivers
+# are kept built-in for the Pi 5's RP1 USB-C/GbE but nothing brings an
+# interface up (no DHCP, no ifup in prod overlay).
+#
+# Keep CONFIG_NET=y and CONFIG_INET=y: loopback is required by
+# Wayland/cog/WPE local IPC (they use AF_UNIX + 127.0.0.1 sockets).
+# Do NOT remove loopback.
+
+# --- Bluetooth: compile OUT entirely ---
+# CONFIG_BT is not set
+# CONFIG_BT_RFCOMM is not set
+# CONFIG_BT_BNEP is not set
+# CONFIG_BT_HIDP is not set
+
+# --- WiFi / WLAN: compile OUT entirely ---
+# CONFIG_CFG80211 is not set
+# CONFIG_MAC80211 is not set
+# CONFIG_WIRELESS is not set
+# CONFIG_WLAN is not set
+# CONFIG_BRCMFMAC is not set
+# CONFIG_RFKILL is not set
+
+# --- Wireless-adjacent protocols: out ---
+# CONFIG_WIRELESS_EXT is not set
+# CONFIG_IEEE80211 is not set
+# CONFIG_NFC is not set
+# CONFIG_CAN is not set
+
+# --- Netfilter: not needed on an offline appliance ---
+# CONFIG_NETFILTER is not set
+
+# --- Tunneling / exotic transports: out ---
+# CONFIG_NET_IPIP is not set
+# CONFIG_NET_IPGRE is not set
+# CONFIG_NET_IPVTI is not set
+# CONFIG_NET_FOU is not set
+# CONFIG_INET_AH is not set
+# CONFIG_INET_ESP is not set
+# CONFIG_INET_IPCOMP is not set
+# CONFIG_IPV6 is not set
+# CONFIG_NET_KEY is not set
+
+# --- USB networking gadget modes: out (host mode stays for touch input) ---
+# CONFIG_USB_NET_DRIVERS is not set
+# CONFIG_USB_GADGET is not set
+
+# --- Debug interfaces that speak over network: out ---
+# CONFIG_NETCONSOLE is not set
+# CONFIG_NETPOLL is not set

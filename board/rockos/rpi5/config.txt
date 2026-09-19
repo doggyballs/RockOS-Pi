@@ -6,9 +6,11 @@ disable_overscan=1
 # KMS graphics for cage (Pi 5 variant)
 dtoverlay=vc4-kms-v3d-pi5
 
-# Waveshare 7" DSI touchscreen (DSI display + I2C touch).
-# 7_0_inchC = 1024x600 capacitive variant (WS170120).
-# panel-waveshare-dsi.ko is auto-loaded by udev on OF match.
-dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC
+# Waveshare 7" HDMI panel (1024x600, USB-HID touch WS170120) — driven
+# directly over HDMI, no DSI overlay needed. The DSI ribbon variant of
+# this panel is parked (never brought up; needs 22-pin cable).
+# Enabling the DSI overlay with no ribbon attached creates a phantom
+# DSI-1 output that cage (EXTEND mode) puts the app on — leaving HDMI
+# black. Keep this disabled while the panel is HDMI-connected.
 
 dtparam=audio=off

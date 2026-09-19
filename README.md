@@ -7,10 +7,8 @@ A Raspberry Pi 5 + 7" touch panel appliance build of
 boots straight into [EntropyLab](https://entropylab.online), the
 self-contained Bitcoin key and wallet calculator.
 
-This is a sibling project rather than a fork-with-intent-to-merge: same
-goal, different hardware, so it lives in its own repo. Full credit to
-the upstream for the original appliance design and for EntropyLab —
-none of this exists without it.
+This is a sibling project of RockOS rather than a fork-with-intent-to-merge: same
+goal, different hardware, so it lives in its own repo. 
 
 **Status:** working prototype — boots to an interactive
 [EntropyLab](https://entropylab.online) (latest upstream, unmodified) on
@@ -21,7 +19,7 @@ the Pi 5 + 7" HDMI touch panel. Another view of the running appliance:
 ## Approach
 
 There are a few good ways to run air-gapped entropy tooling, and
-they're all trade-offs:
+they're all have trade-offs:
 
 - **Bootable USB on your own machine** (upstream RockOS's approach) —
   most convenient, no extra hardware, and the upstream has done solid
@@ -41,7 +39,7 @@ trade-off (it's another box on your shelf, and the Pi's HDMI panel and
 case are extra parts), not a claim that it's the right answer for
 everyone.
 
-## What changed from upstream
+## What changed from the upstream RockOS
 
 Three areas, briefly. Details live in `AGENTS.md` and
 `docs/proposal-cog-wpe-browser.md`.
@@ -65,9 +63,8 @@ and build-time reductions.
 Upstream ships QtWebEngine 5.15 (Chromium 87), which pinned EntropyLab
 at v0.1.3 — newer EntropyLab needs WASM reference-types and ES2022
 that Chromium 87 can't run. This repo swaps in **cog + WPE WebKit
-2.50** (maintained by Igalia), which lifts that ceiling and brings
-active security backports. The kiosk stack became cage (a wlroots
-kiosk compositor) + cog — no X11, no Qt.
+2.50**, which lifts that ceiling and brings active security backports. 
+The kiosk stack became cage (a wlroots kiosk compositor) + cog — no X11, no Qt.
 
 Getting there took more than Buildroot switches: cage needed a patch to
 advertise `wayland-drm`, Mesa needed its `legacy-wayland` EGL binding

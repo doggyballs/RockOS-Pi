@@ -1,5 +1,7 @@
 # RockOS-Pi
 
+![RockOS-Pi running EntropyLab v0.2.2](images/entropylab-v0.2.2-landscape.jpg)
+
 A Raspberry Pi 5 + 7" touch panel appliance build of
 [RockOS](https://github.com/SaniExp/RockOS) — the minimal Linux OS that
 boots straight into [EntropyLab](https://entropylab.online), the
@@ -10,8 +12,11 @@ goal, different hardware, so it lives in its own repo. Full credit to
 the upstream for the original appliance design and for EntropyLab —
 none of this exists without it.
 
-**Status:** working prototype — boots to an interactive EntropyLab on
-the Pi 5 + 7" HDMI touch panel. *(Photos coming.)*
+**Status:** working prototype — boots to an interactive
+[EntropyLab](https://entropylab.online) (latest upstream, unmodified) on
+the Pi 5 + 7" HDMI touch panel. Another view of the running appliance:
+
+![Portrait view of the appliance](images/entropylab-v0.2.2-portrait.jpg)
 
 ## Approach
 

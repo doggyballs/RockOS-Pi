@@ -37,6 +37,10 @@ BR2_PACKAGE_MESA3D_OPENGL_ES=y
 # export rendered frames as wl_buffers). Without this Mesa 26.1 compiles the
 # extension out and cog aborts on first frame export.
 BR2_PACKAGE_MESA3D_LEGACY_BIND_WAYLAND_DISPLAY=y
+# WPE WebKit resolves text/html via the freedesktop MIME database
+# (unlike QtWebEngine/Chromium which hardcodes it). Without this, cog
+# renders the raw HTML source as plain text.
+BR2_PACKAGE_SHARED_MIME_INFO=y
 # Browser engine: WPE WebKit + cog (replaces Qt5/QtWebEngine/rockos-browser)
 BR2_PACKAGE_WPEWEBKIT=y
 BR2_PACKAGE_COG=y
